@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>IAPE • Agendamento de Espaços</title>
   <meta name="theme-color" content="#0b3d91" />
-  <!-- Favicons (coloque os arquivos na raiz do repositório) -->
+  <!-- Favicons (opcional) -->
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="alternate icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
@@ -85,7 +85,8 @@
     .slot-free{border-style:dashed;box-shadow:inset 0 0 0 1px rgba(22,163,74,.15)}
     .slot-txt{font-weight:600}
     .slot-sub{font-size:12px;color:#94a3b8}
-    .slot-btn{padding:8px 12px;border-radius:10px;background:var(--navy);color:#fff} .slot-btn.selected{background:var(--ok)}
+    .slot-btn{padding:8px 12px;border-radius:10px;background:var(--navy);color:#fff}
+    .slot-btn.selected{background:var(--ok)}
     .slot-busy{opacity:.9}
 
     /* chips da tarde */
@@ -337,7 +338,7 @@ function consolidateMonth(res){
   const merged = [];
   for (const [date, arr] of Object.entries(byDate)){
     const groups = {};
-    arr.forEach(r=>{ const k = `${r.solicitante}${r.atividade}`; (groups[k] ||= []).push(r); });
+    arr.forEach(r=>{ const k = `${r.solicitante}\u0001${r.atividade}`; (groups[k] ||= []).push(r); });
     for (const list of Object.values(groups)){
       list.sort((a,b)=> parseMin(a.start) - parseMin(b.start));
       let first = list[0];
@@ -361,24 +362,6 @@ function consolidateMonth(res){
     }
   }
   return merged.sort((a,b)=> a.date===b.date ? (parseMin(a.start)-parseMin(b.start)) : a.date.localeCompare(b.date));
-}; res.forEach(r=>{ (byDate[r.date] ||= []).push(r); });
-  const merged = [];
-  for (const [date, arr] of Object.entries(byDate)){
-    const groups = {};
-    arr.forEach(r=>{ const k = `${r.solicitante}\u0001${r.atividade}`; (groups[k] ||= []).push(r); });
-    for (const list of Object.values(groups)){
-      list.sort((a,b)=> parseMin(a.start) - parseMin(b.start));
-      let curr = { date, solicitante:list[0].solicitante, atividade:list[0].atividade, start:list[0].start, end:list[0].end };
-      for (let i=1;i<list.length;i++){
-        const s = parseMin(list[i].start), e = parseMin(list[i].end);
-        const ce = parseMin(curr.end);
-        if (s <= ce){ if (e > ce) curr.end = list[i].end; }
-        else { merged.push(curr); curr = { date, solicitante:list[i].solicitante, atividade:list[i].atividade, start:list[i].start, end:list[i].end }; }
-      }
-      merged.push(curr);
-    }
-  }
-  return merged.sort((a,b)=> a.date===b.date ? (parseMin(a.start)-parseMin(b.start)) : a.date.localeCompare(b.date));
 }
 
 /* ===== List (mês) ===== */
@@ -393,14 +376,6 @@ function renderList(){
     else { head += `${r.start}–${r.end}`; }
     const row=document.createElement('div'); row.className='row';
     row.innerHTML = `<div class="badge">${head}</div>
-      <div><div><strong>Solicitante:</strong> ${esc(r.solicitante)}</div>
-      <div style=\"margin-top:4px\"><strong>Atividade:</strong> ${esc(r.atividade)}</div></div>`;
-    body.appendChild(row);
-  });
-}
-  merged.forEach(r=>{
-    const row=document.createElement('div'); row.className='row';
-    row.innerHTML = `<div class="badge">${fmtBR(r.date)} • ${r.start}–${r.end}</div>
       <div><div><strong>Solicitante:</strong> ${esc(r.solicitante)}</div>
       <div style="margin-top:4px"><strong>Atividade:</strong> ${esc(r.atividade)}</div></div>`;
     body.appendChild(row);
@@ -442,9 +417,10 @@ function renderMorningList(){
     const busy = taken.has(s.slotKey);
     const selected = isSelected(s.start,s.end);
     const item=document.createElement('div'); item.className=`slot-item ${busy?'slot-busy':'slot-free'}`;
-    const left=document.createElement('div'); left.innerHTML=`<div class=\"slot-txt\">${esc(s.label)} — ${s.start}–${s.end}</div>`;
+    const left=document.createElement('div'); left.innerHTML=`<div class="slot-txt">${esc(s.label)} — ${s.start}–${s.end}</div>`;
     const right=document.createElement('div');
-    const btn=document.createElement('button'); btn.className='slot-btn'; btn.textContent = selected? 'Remover' : (busy?'Indisponível':'Selecionar');
+    const btn=document.createElement('button'); btn.className='slot-btn' + (selected?' selected':'');
+    btn.textContent = selected? '✅ Selecionado' : (busy?'Indisponível':'Selecionar');
     btn.disabled = busy;
     btn.addEventListener('click', ()=>{ toggleSelection({type:'slot', start:s.start, end:s.end, slot_key:s.slotKey, slot_label:s.label}); renderMorningList(); });
     right.appendChild(btn);
