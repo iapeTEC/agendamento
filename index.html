@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head> 
- <link rel="icon" href="favicon.svg" type="image/svg+xml">
- <link rel="alternate icon" href="favicon.ico">
- <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
- <link rel="manifest" href="site.webmanifest">
- <link rel="mask-icon" href="safari-pinned-tab.svg" color="#0b3d91">
- <meta name="msapplication-TileColor" content="#0b3d91">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>IAPE • Agendamento de Espaços</title>
   <meta name="theme-color" content="#0b3d91" />
+  <!-- Favicons (coloque os arquivos na raiz do repositório) -->
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="site.webmanifest">
+  <link rel="mask-icon" href="safari-pinned-tab.svg" color="#0b3d91">
+  <meta name="msapplication-TileColor" content="#0b3d91">
   <style>
     :root{ --navy:#0b3d91; --ok:#16a34a; --muted:#cbd5e1; --danger:#ef4444; --bg:#000; --text:#e5e7eb; --card:#0b0b0b; --border:#1f2937; }
     body.light{ --bg:#fff; --text:#111827; --card:#f8fafc; --border:#e5e7eb }
@@ -67,6 +68,7 @@
     body.light .badge{background:#f1f5f9;color:#334155}
     .empty{padding:12px;color:#94a3b8}
 
+    /* MODAL */
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:60;padding:12px;overflow:auto}
     .modal.open{display:flex}
     .sheet{width:100%;max-width:760px;max-height:calc(100dvh - 24px);display:flex;flex-direction:column;background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:auto;-webkit-overflow-scrolling:touch}
@@ -85,7 +87,6 @@
     .slot-sub{font-size:12px;color:#94a3b8}
     .slot-btn{padding:8px 12px;border-radius:10px;background:var(--navy);color:#fff}
     .slot-busy{opacity:.9}
-    .time-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
     /* chips da tarde */
     .af-grid{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
@@ -149,13 +150,13 @@
           <div id="morningList" class="slot-list"></div>
         </div>
         <div>
-          <h3 style="margin:12px 0 6px">Tarde (13:00–22:00) — blocos de 30 min</h3>
+          <h3 style="margin:12px 0 6px">Tarde (13:00–18:00) — blocos de 30 min</h3>
           <div id="afGrid" class="af-grid"></div>
           <div id="afInfo" class="slot-sub" style="margin-top:6px"></div>
         </div>
       </div>
       <div class="actions">
-        <div id="selSummary" class="slot-sub">0 horários selecionados</div>
+        <div id="selSummary" class="slot-sub">0 horário(s) selecionado(s)</div>
         <div style="display:flex; gap:8px; align-items:center;">
           <button id="clearSel" class="icon-btn" title="Limpar seleção">Limpar</button>
           <button id="goReserve" class="btn" disabled>Reservar selecionados</button>
@@ -193,9 +194,9 @@
 
 <script>
 /* ========= CONFIG ========= */
-const API_BASE = "https://script.google.com/macros/s/AKfycbz22XIFYP3peSY7sCcO6Vg6CxtBByMGB7GY_MzUYEKSBVLSLisxh3NIjMve23zMG4VM/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbwuluA4Eyw_cYc1RGGNvOAwZrzxtaaLzprChsY5UDYDUoStI5wenVkXTQjIdPW_eaEn/exec";
 const AFTERNOON_START = "13:00";
-const AFTERNOON_END   = "22:00"; // até as 22h
+const AFTERNOON_END   = "18:00"; // até as 22h
 const BLOCK_MIN      = 30;       // blocos de 30 min
 
 const SPACES = [
@@ -330,55 +331,36 @@ function renderCalendar(){
   const legend=document.createElement('div'); legend.className='legend'; legend.innerHTML=`<span class="dot free"></span> Há horários livres <span class="dot busy" style="margin-left:12px"></span> Sem disponibilidade`; wrap.appendChild(legend);
 }
 
-/* ===== List (mês) ===== */
-// Consolida reservas contíguas por dia + (solicitante, atividade)
+/* ===== Consolidação para a lista mensal ===== */
 function consolidateMonth(res){
-  const byDate = {};
-  res.forEach(r=>{ (byDate[r.date] ||= []).push(r); });
+  const byDate = {}; res.forEach(r=>{ (byDate[r.date] ||= []).push(r); });
   const merged = [];
   for (const [date, arr] of Object.entries(byDate)){
-    // agrupa por quem/atividade
     const groups = {};
-    arr.forEach(r=>{ const k = `${r.solicitante}${r.atividade}`; (groups[k] ||= []).push(r); });
+    arr.forEach(r=>{ const k = `${r.solicitante}\u0001${r.atividade}`; (groups[k] ||= []).push(r); });
     for (const list of Object.values(groups)){
       list.sort((a,b)=> parseMin(a.start) - parseMin(b.start));
       let curr = { date, solicitante:list[0].solicitante, atividade:list[0].atividade, start:list[0].start, end:list[0].end };
       for (let i=1;i<list.length;i++){
         const s = parseMin(list[i].start), e = parseMin(list[i].end);
         const ce = parseMin(curr.end);
-        if (s <= ce){ // contígua ou sobreposta
-          if (e > ce) curr.end = list[i].end;
-        } else {
-          merged.push(curr);
-          curr = { date, solicitante:list[i].solicitante, atividade:list[i].atividade, start:list[i].start, end:list[i].end };
-        }
+        if (s <= ce){ if (e > ce) curr.end = list[i].end; }
+        else { merged.push(curr); curr = { date, solicitante:list[i].solicitante, atividade:list[i].atividade, start:list[i].start, end:list[i].end }; }
       }
       merged.push(curr);
     }
   }
   return merged.sort((a,b)=> a.date===b.date ? (parseMin(a.start)-parseMin(b.start)) : a.date.localeCompare(b.date));
 }
+
+/* ===== List (mês) ===== */
 function renderList(){
-  const body = $('#reservationsBody');
-  body.innerHTML = '';
+  const body=$('#reservationsBody'); body.innerHTML='';
   const merged = consolidateMonth(state.reservations);
-  if (!merged.length){ body.innerHTML = `<div class="empty">Nenhuma reserva neste mês.</div>`; return; }
-  merged.forEach(r => {
-    const row = document.createElement('div'); row.className = 'row';
-    row.innerHTML = `
-      <div class="badge">${fmtBR(r.date)} • ${r.start}–${r.end}</div>
-      <div>
-        <div><strong>Solicitante:</strong> ${esc(r.solicitante)}</div>
-        <div style="margin-top:4px"><strong>Atividade:</strong> ${esc(r.atividade)}</div>
-      </div>`;
-    body.appendChild(row);
-  });
-}
-  const sorted=[...state.reservations].sort((a,b)=> a.date===b.date ? (parseMin(a.start)-parseMin(b.start)) : a.date.localeCompare(b.date));
-  sorted.forEach(r=>{
+  if(!merged.length){ body.innerHTML=`<div class="empty">Nenhuma reserva neste mês.</div>`; return; }
+  merged.forEach(r=>{
     const row=document.createElement('div'); row.className='row';
-    const label = r.type==='slot' ? `${r.slot_label} (${r.start}-${r.end})` : `${r.start}–${r.end}`;
-    row.innerHTML = `<div class="badge">${fmtBR(r.date)} • ${label}</div>
+    row.innerHTML = `<div class="badge">${fmtBR(r.date)} • ${r.start}–${r.end}</div>
       <div><div><strong>Solicitante:</strong> ${esc(r.solicitante)}</div>
       <div style="margin-top:4px"><strong>Atividade:</strong> ${esc(r.atividade)}</div></div>`;
     body.appendChild(row);
@@ -420,7 +402,7 @@ function renderMorningList(){
     const busy = taken.has(s.slotKey);
     const selected = isSelected(s.start,s.end);
     const item=document.createElement('div'); item.className=`slot-item ${busy?'slot-busy':'slot-free'}`;
-    const left=document.createElement('div'); left.innerHTML=`<div class="slot-txt">${esc(s.label)} — ${s.start}–${s.end}</div>`;
+    const left=document.createElement('div'); left.innerHTML=`<div class=\"slot-txt\">${esc(s.label)} — ${s.start}–${s.end}</div>`;
     const right=document.createElement('div');
     const btn=document.createElement('button'); btn.className='slot-btn'; btn.textContent = selected? 'Remover' : (busy?'Indisponível':'Selecionar');
     btn.disabled = busy;
@@ -486,7 +468,7 @@ async function apiCreateBatch(payload){
   const params = new URLSearchParams(); Object.entries(payload).forEach(([k,v])=> params.append(k, v));
   const res = await fetch(API_BASE, { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' }, body: params.toString() });
   const data = await res.json().catch(()=> ({}));
-  if(!res.ok || data.ok===false){ const msg=(data&&data.message)||'Erro ao salvar.'; if(/Conflito/i.test(msg)) throw new Error(msg); throw new Error(msg); }
+  if(!res.ok || data.ok===false){ const msg=(data&&data.message)||'Erro ao salvar.'; throw new Error(msg); }
   return data;
 }
 async function loadReservations(){ const slug=state.route.space; if(!slug) return; const y=state.month.getFullYear(), m=state.month.getMonth()+1; state.reservations = await apiList(slug,y,m); }
