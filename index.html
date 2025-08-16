@@ -78,6 +78,9 @@
 
     .empty{padding:12px;color:#94a3b8}
 
+    /* botão imprimir */
+    .print-wrap{display:flex;justify-content:center;padding:16px 0 4px}
+
     /* MODAL */
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:60;padding:12px;overflow:auto}
     .modal.open{display:flex}
@@ -139,6 +142,7 @@
         <h3>Reservas do mês</h3>
         <div id="reservationsBody"></div>
       </div>
+      <div class="print-wrap"><button id="printReportBtn" class="btn" type="button">🖨️ Imprimir relatório</button></div>
     </section>
   </main>
 
@@ -568,6 +572,72 @@ function renderSpace(){
 
 /* ===== Root ===== */
 function render(){ if(state.route.page==='home') renderHome(); else renderSpace(); }
+// ===== Relatório em PDF (print) =====
+function printReport(){
+  const spaceSlug = state.route.space;
+  const space = SPACES.find(s=>s.slug===spaceSlug);
+  const month = state.month;
+  const merged = consolidateMonth(state.reservations);
+  const today = todayISO();
+  const logoURL = new URL('assets/logo.png', location.href).href;
+  const by = {};
+  merged.forEach(r=>{ (by[r.date] ||= []).push(r); });
+  const keys = Object.keys(by).sort();
+  let totalMin = 0;
+  const dur = (mins)=>{ const h=Math.floor(mins/60), m=mins%60; return h?(m?`${h}h ${m}min`:`${h}h`):`${m}min`; };
+  const sections = keys.map(date=>{
+    const rows = by[date].map(r=>{
+      const mins = parseMin(r.end) - parseMin(r.start);
+      totalMin += mins;
+      const turno = r.allSlots ? 'Manhã' : 'Tarde';
+      const labels = (r.allSlots && r.labels && r.labels.length) ? r.labels.join(', ') : '—';
+      return `<tr><td>${r.start}–${r.end}</td><td>${dur(mins)}</td><td>${turno}</td><td>${esc(labels)}</td><td>${esc(r.solicitante)}</td><td>${esc(r.atividade)}</td></tr>`;
+    }).join('');
+    const dow = new Date(date+"T00:00:00").toLocaleDateString('pt-BR', { weekday:'long' });
+    const title = (date===today) ? 'HOJE' : `${fmtBR(date)} (${dow})`;
+    return `<h3>${title}</h3><table class="t"><thead><tr><th>Hora</th><th>Duração</th><th>Turno</th><th>Aulas</th><th>Solicitante</th><th>Atividade</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }).join('');
+  const totalDur = dur(totalMin);
+  const monthName = month.toLocaleDateString('pt-BR',{ month:'long', year:'numeric' });
+  const genAt = new Date().toLocaleString('pt-BR', { timeZone:'America/Recife' });
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Relatório ${space?esc(space.name):''} • ${monthName}</title>
+  <style>
+    @page{ size: A4; margin: 14mm; }
+    *{ box-sizing: border-box }
+    body{ font: 12pt -apple-system,Segoe UI,Roboto,Arial; color:#111; margin:0; }
+    header{ display:flex; align-items:center; gap:12px; padding-bottom:6px; border-bottom:2px solid #ddd; margin-bottom:12px }
+    header img{ height:34px }
+    h1{ font-size:18pt; margin:0 }
+    h2{ font-size:13pt; margin:2px 0 0; color:#444 }
+    .meta{ font-size:10pt; color:#555; margin:10px 0 14px }
+    h3{ font-size:12.5pt; margin:18px 0 6px; color:#111 }
+    table.t{ width:100%; border-collapse:collapse; margin:4px 0 10px }
+    .t th,.t td{ border:1px solid #ddd; padding:6px 8px; vertical-align:top }
+    .t thead th{ background:#f3f4f6; text-align:left }
+    .t tbody tr:nth-child(even){ background:#fafafa }
+    footer{ margin-top:12px; font-size:10pt; color:#666; border-top:1px solid #eee; padding-top:6px }
+    @media print{ .page-break{ page-break-before: always } }
+  </style>
+  </head><body>
+    <header>
+      <img src="${logoURL}" alt="IAPE" />
+      <div>
+        <h1>Relatório de Reservas</h1>
+        <h2>${space?esc(space.name):''} • ${monthName}</h2>
+      </div>
+    </header>
+    <div class="meta">Gerado em ${genAt}. Total de reservas: ${merged.length}. Tempo total de uso: ${totalDur}.</div>
+    ${sections || '<p>Não há reservas neste mês.</p>'}
+    <footer>Fonte: IAPE Agendamento — gerado em ${genAt}</footer>
+    <script>window.onload=function(){ setTimeout(function(){ window.print(); }, 60); }<\/script>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  if(!w){ alert('Bloqueador de pop-up ativo. Permita abrir nova aba para imprimir.'); return; }
+  w.document.write(html); w.document.close();
+}
+
+document.getElementById('printReportBtn')?.addEventListener('click', printReport);
+
 function boot(){
   updateLogoForTheme();
   renderHome();
