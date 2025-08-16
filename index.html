@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agendamento de Espaços</title>
+  <title>IAPE • Agendamento de Espaços</title>
   <meta name="theme-color" content="#0b3d91" />
+  <!-- Performance: conexão antecipada com Apps Script -->
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
+  <link rel="dns-prefetch" href="//script.google.com">
   <!-- Favicons (opcional) -->
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="alternate icon" href="favicon.ico">
@@ -104,7 +107,7 @@
       <img id="logo" class="logo" src="logo3.png" alt="IAPE" />
       <div class="title">IAPE • Agendamento de Espaços</div>
       <div class="grow"></div>
-      <button id="themeToggle" class="btn" aria-label="Alternar tema">🌓</button>
+      <button id="themeToggle" class="btn" aria-label="Alternar tema">🌓&nbsp;Tema</button>
     </div>
   </header>
 
@@ -195,9 +198,9 @@
 
 <script>
 /* ========= CONFIG ========= */
-const API_BASE = "https://script.google.com/macros/s/AKfycbwuluA4Eyw_cYc1RGGNvOAwZrzxtaaLzprChsY5UDYDUoStI5wenVkXTQjIdPW_eaEn/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbwuluA4Eyw_cYc1RGGNvOAwZrzxtaaLzprChsY5UDYDUoStI5wenVkXTQjIdPW_eaEn/exec"; // use o seu link mais recente
 const AFTERNOON_START = "13:00";
-const AFTERNOON_END   = "18:00"; // até as 18h
+const AFTERNOON_END   = "18:00"; // até as 18h (ajuste se quiser 22:00)
 const BLOCK_MIN      = 30;       // blocos de 30 min
 
 const SPACES = [
@@ -205,7 +208,7 @@ const SPACES = [
   { name: "Sala de Recursos", slug: "sala-de-recursos", img: "assets/sala-recursos.png" },
   { name: "Laboratório", slug: "laboratorio", img: "assets/laboratorio.png" },
   { name: "E-Class", slug: "e-class", img: "assets/e-class.png" },
-  { name: "Salão de Jogos", slug: "salao-de-jogos", img: "assets/salao-jogos.png },
+  { name: "Salão de Jogos", slug: "salao-de-jogos", img: "assets/salao-jogos.png" },
   { name: "Casarão", slug: "casarao", img: "assets/casarao.png" },
   { name: "Fazendinha", slug: "fazendinha", img: "assets/fazendinha.png" },
   { name: "Auditório Feminino", slug: "auditorio-feminino", img: "assets/auditorio-feminino.png" },
@@ -257,8 +260,9 @@ function slotsForDate(iso){ const key = dayKey(iso); return (TIMESLOTS[key]||[])
 function parseMin(hhmm){ const [h,m]=String(hhmm).split(':').map(Number); return (isFinite(h)&&isFinite(m)) ? h*60+m : 0; }
 function minToHHMM(n){ const h=String(Math.floor(n/60)).padStart(2,'0'); const m=String(n%60).padStart(2,'0'); return `${h}:${m}`; }
 function intervalsOverlap(aS,aE,bS,bE){ return aS < bE && bS < aE; }
-function setTheme(t){ if(t==='light') document.body.classList.add('light'); else document.body.classList.remove('light'); localStorage.setItem('iape-theme',t); }
-(function(){ const saved=localStorage.getItem('iape-theme'); if(saved) setTheme(saved); })();
+function updateLogoForTheme(){ const isLight = document.body.classList.contains('light'); const img = document.getElementById('logo'); img.src = isLight ? 'assets/logo.png' : 'logo3.png'; }
+function setTheme(t){ if(t==='light') document.body.classList.add('light'); else document.body.classList.remove('light'); localStorage.setItem('iape-theme',t); updateLogoForTheme(); }
+(function(){ const saved=localStorage.getItem('iape-theme'); if(saved) setTheme(saved); else updateLogoForTheme(); })();
 $('#themeToggle').addEventListener('click',()=> setTheme(document.body.classList.contains('light')?'dark':'light'));
 
 /* ===== Router ===== */
@@ -271,7 +275,7 @@ function renderHome(){
   const grid=$('#spaceGrid'); grid.innerHTML='';
   SPACES.forEach(sp=>{
     const a=document.createElement('a'); a.href=`#space=${sp.slug}`; a.className='card';
-    a.innerHTML=`<img src="${sp.img}" alt="${sp.name}" onerror="this.src='https://picsum.photos/seed/${sp.slug}/800/450'"/><div class="name">${sp.name}</div>`;
+    a.innerHTML=`<img src="${sp.img}" alt="${sp.name}" loading="lazy" decoding="async" onerror="this.src='https://picsum.photos/seed/${sp.slug}/800/450'"/><div class="name">${sp.name}</div>`;
     grid.appendChild(a);
   });
   $('#home').hidden=false; $('#spaceView').hidden=true;
@@ -492,7 +496,7 @@ async function loadReservations(){ const slug=state.route.space; if(!slug) retur
 /* ===== Space view ===== */
 function renderSpace(){
   const slug=state.route.space; const sp=SPACES.find(s=>s.slug===slug); if(!sp){ goHome(); return; }
-  $('#spaceImg').src = sp.img; $('#spaceImg').onerror=function(){ this.src=`https://picsum.photos/seed/${sp.slug}/800/450`; };
+  const hero = $('#spaceImg'); hero.decoding='async'; hero.loading='eager'; hero.src = sp.img; hero.onerror=function(){ this.src = `https://picsum.photos/seed/${sp.slug}/800/450`; };
   $('#spaceName').textContent=sp.name; $('#spaceSlug').textContent=`/${sp.slug}`;
   renderCalendar(); renderList(); $('#home').hidden=true; $('#spaceView').hidden=false;
 }
@@ -500,6 +504,7 @@ function renderSpace(){
 /* ===== Root ===== */
 function render(){ if(state.route.page==='home') renderHome(); else renderSpace(); }
 function boot(){
+  updateLogoForTheme();
   renderHome();
   $$('#spaceView .back').forEach(el=> el.addEventListener('click', e=>{ e.preventDefault(); location.hash=''; }));
   const h=new URLSearchParams(location.hash.slice(1)); if(h.get('space')) goSpace(h.get('space')); else goHome();
@@ -508,7 +513,3 @@ boot();
 </script>
 </body>
 </html>
-
-
-
-
