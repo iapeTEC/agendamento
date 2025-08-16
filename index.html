@@ -67,8 +67,15 @@
     .list{margin-top:14px;border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden}
     .list h3{margin:0;padding:12px;border-bottom:1px solid var(--border)}
     .row{display:grid;grid-template-columns:180px 1fr;gap:8px;padding:12px;border-top:1px dashed var(--border)}
+    /* Zebra nas linhas da lista */
+    #reservationsBody .row:nth-child(even){ background:#111827; }
+    body.light #reservationsBody .row:nth-child(even){ background:#eef2f7; }
+
     .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#0f172a;color:#cbd5e1;border:1px solid var(--border);font-size:13px}
     body.light .badge{background:#f1f5f9;color:#334155}
+    /* Destaque HOJE */
+    .badge.today{ background: var(--ok); color:#fff; border-color: color-mix(in hsl, var(--ok) 55%, var(--border)); font-weight:800; }
+
     .empty{padding:12px;color:#94a3b8}
 
     /* MODAL */
@@ -252,9 +259,11 @@ const TIMESLOTS = {
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const state = { route:{page:'home',space:null}, month:new Date(), reservations:[], selectedDay:null, selections:[] };
+const RES_CACHE = new Map(); // cache por espaço+mês (SWR)
 
 function fmtDateISO(d){ return d.toISOString().slice(0,10); }
 function fmtBR(iso){ return new Date(iso+"T00:00:00").toLocaleDateString('pt-BR',{timeZone:'America/Recife'}); }
+function todayISO(){ return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Recife',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
 function dayKey(iso){ return ['SUN','MON','TUE','WED','THU','FRI','SAT'][new Date(iso+"T00:00:00").getDay()]; }
 function slotsForDate(iso){ const key = dayKey(iso); return (TIMESLOTS[key]||[]).map(s=>({...s, slotKey:`${s.start}-${s.end}`})); }
 function parseMin(hhmm){ const [h,m]=String(hhmm).split(':').map(Number); return (isFinite(h)&&isFinite(m)) ? h*60+m : 0; }
@@ -265,9 +274,40 @@ function setTheme(t){ if(t==='light') document.body.classList.add('light'); else
 (function(){ const saved=localStorage.getItem('iape-theme'); if(saved) setTheme(saved); else updateLogoForTheme(); })();
 $('#themeToggle').addEventListener('click',()=> setTheme(document.body.classList.contains('light')?'dark':'light'));
 
+/* ===== Cache helpers (SWR) ===== */
+function monthKey(space, y, m){ return `${space}:${y}-${String(m).padStart(2,'0')}`; }
+function getCached(space,y,m){ return RES_CACHE.get(monthKey(space,y,m)) || []; }
+async function fetchAndCache(space,y,m){ const data = await apiList(space,y,m); RES_CACHE.set(monthKey(space,y,m), data); return data; }
+function sameMonth(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth(); }
+async function swrUpdate(space,y,m){
+  try{
+    const fresh = await fetchAndCache(space,y,m);
+    // só atualiza se ainda estamos olhando este espaço/mês
+    if(state.route.space===space && state.month.getFullYear()===y && (state.month.getMonth()+1)===m){
+      state.reservations = fresh; renderCalendar(); renderList();
+    }
+  }catch(e){ /* silencia falha de rede */ }
+}
+function prefetchAdjacent(space,baseDate){
+  const prev=new Date(baseDate.getFullYear(), baseDate.getMonth()-1, 1);
+  const next=new Date(baseDate.getFullYear(), baseDate.getMonth()+1, 1);
+  const py=prev.getFullYear(), pm=prev.getMonth()+1, ny=next.getFullYear(), nm=next.getMonth()+1;
+  if(!RES_CACHE.has(monthKey(space,py,pm))) fetchAndCache(space,py,pm).catch(()=>{});
+  if(!RES_CACHE.has(monthKey(space,ny,nm))) fetchAndCache(space,ny,nm).catch(()=>{});
+}
+
 /* ===== Router ===== */
 function goHome(){ state.route={page:'home',space:null}; render(); }
-function goSpace(slug){ state.route={page:'space',space:slug}; state.month=new Date(); loadReservations().then(render); }
+function goSpace(slug){
+  state.route={page:'space',space:slug};
+  state.month=new Date();
+  // pinta imediatamente com cache (ou vazio) e atualiza em background
+  const y=state.month.getFullYear(), m=state.month.getMonth()+1;
+  state.reservations = getCached(slug,y,m);
+  render(); // mostra já o calendário
+  swrUpdate(slug,y,m); // atualiza em 2º plano
+  prefetchAdjacent(slug, state.month);
+}
 window.addEventListener('hashchange',()=>{ const h=new URLSearchParams(location.hash.slice(1)); h.get('space')?goSpace(h.get('space')):goHome(); });
 
 /* ===== Home ===== */
@@ -317,9 +357,31 @@ function renderCalendar(){
       </button>
     </div>`;
   wrap.appendChild(head);
-  $('#prevM').addEventListener('click',()=>{ state.month=new Date(month.getFullYear(),month.getMonth()-1,1); loadReservations().then(renderCalendar); });
-  $('#nextM').addEventListener('click',()=>{ state.month=new Date(month.getFullYear(),month.getMonth()+1,1); loadReservations().then(renderCalendar); });
-  $('#todayBtn').addEventListener('click',()=>{ state.month=new Date(); loadReservations().then(renderCalendar); });
+
+  // Navegação instantânea + atualização em background
+  $('#prevM').addEventListener('click',()=>{
+    const space=state.route.space; const m=state.month;
+    state.month=new Date(m.getFullYear(),m.getMonth()-1,1);
+    const y=state.month.getFullYear(), mo=state.month.getMonth()+1;
+    state.reservations = getCached(space,y,mo);
+    renderCalendar(); renderList();
+    swrUpdate(space,y,mo); prefetchAdjacent(space, state.month);
+  });
+  $('#nextM').addEventListener('click',()=>{
+    const space=state.route.space; const m=state.month;
+    state.month=new Date(m.getFullYear(),m.getMonth()+1,1);
+    const y=state.month.getFullYear(), mo=state.month.getMonth()+1;
+    state.reservations = getCached(space,y,mo);
+    renderCalendar(); renderList();
+    swrUpdate(space,y,mo); prefetchAdjacent(space, state.month);
+  });
+  $('#todayBtn').addEventListener('click',()=>{
+    const space=state.route.space; state.month=new Date();
+    const y=state.month.getFullYear(), mo=state.month.getMonth()+1;
+    state.reservations = getCached(space,y,mo);
+    renderCalendar(); renderList();
+    swrUpdate(space,y,mo); prefetchAdjacent(space, state.month);
+  });
 
   const grid=document.createElement('div'); grid.className='cal-grid';
   ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d=>{ const el=document.createElement('div'); el.textContent=d; el.className='dow'; grid.appendChild(el); });
@@ -374,12 +436,14 @@ function renderList(){
   const merged = consolidateMonth(state.reservations);
   if(!merged.length){ body.innerHTML=`<div class="empty">Nenhuma reserva neste mês.</div>`; return; }
   const niceJoin = (arr)=> arr.length<=1? (arr[0]||'') : (arr.slice(0,-1).join(', ') + ' e ' + arr[arr.length-1]);
+  const today = todayISO();
   merged.forEach(r=>{
-    let head = `${fmtBR(r.date)} • `;
+    const isToday = r.date === today;
+    let head = isToday ? `HOJE • ` : `${fmtBR(r.date)} • `;
     if (r.allSlots && r.labels && r.labels.length){ head += `${niceJoin(r.labels)} ${r.start}–${r.end}`; }
     else { head += `${r.start}–${r.end}`; }
     const row=document.createElement('div'); row.className='row';
-    row.innerHTML = `<div class="badge">${head}</div>
+    row.innerHTML = `<div class="badge ${isToday?'today':''}">${head}</div>
       <div><div><strong>Solicitante:</strong> ${esc(r.solicitante)}</div>
       <div style="margin-top:4px"><strong>Atividade:</strong> ${esc(r.atividade)}</div></div>`;
     body.appendChild(row);
@@ -459,7 +523,7 @@ $('#btnSalvar').addEventListener('click', async (ev)=>{
     const slug=state.route.space; const iso=state.selectedDay; if(!slug||!iso||!state.selections.length){ return; }
 
     // valida contra reservas atuais (último estado)
-    await loadReservations();
+    await swrUpdate(slug, state.month.getFullYear(), state.month.getMonth()+1); // sincroniza mês atual
     const todays=state.reservations.filter(r=>r.date===iso);
     const conflictLocal = state.selections.some(it=> todays.some(r=> intervalsOverlap(parseMin(it.start),parseMin(it.end),parseMin(r.start),parseMin(r.end))));
     if(conflictLocal){ showErr('Algum horário selecionado foi reservado agora há pouco. Reabra os horários e tente novamente.'); return; }
@@ -468,7 +532,9 @@ $('#btnSalvar').addEventListener('click', async (ev)=>{
     await apiCreateBatch({ space: slug, date: iso, solicitante, atividade, items: JSON.stringify(items) });
 
     toast('Reservas salvas!'); reserveModal.classList.remove('open'); closeSlots();
-    await loadReservations(); renderCalendar(); renderList();
+    // Atualiza cache e tela
+    const y=state.month.getFullYear(), m=state.month.getMonth()+1; await swrUpdate(slug,y,m);
+    renderCalendar(); renderList();
   }catch(e){ showErr(e.message||'Falha ao salvar.'); }
   finally{ btn.disabled=false; btn.textContent='Salvar reservas'; }
 });
@@ -491,7 +557,6 @@ async function apiCreateBatch(payload){
   if(!res.ok || data.ok===false){ const msg=(data&&data.message)||'Erro ao salvar.'; throw new Error(msg); }
   return data;
 }
-async function loadReservations(){ const slug=state.route.space; if(!slug) return; const y=state.month.getFullYear(), m=state.month.getMonth()+1; state.reservations = await apiList(slug,y,m); }
 
 /* ===== Space view ===== */
 function renderSpace(){
@@ -513,5 +578,3 @@ boot();
 </script>
 </body>
 </html>
-
-
