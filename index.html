@@ -6,78 +6,95 @@
   <title>IAPE • Agendamento de Espaços</title>
   <meta name="theme-color" content="#0b3d91" />
   <style>
-    :root{
-      --navy:#0b3d91; --ok:#16a34a; --muted:#cbd5e1; --danger:#ef4444;
-      --bg:#000; --text:#e5e7eb; --card:#0b0b0b; --border:#1f2937;
-    }
+    :root{ --navy:#0b3d91; --ok:#16a34a; --muted:#cbd5e1; --danger:#ef4444; --bg:#000; --text:#e5e7eb; --card:#0b0b0b; --border:#1f2937; }
     body.light{ --bg:#fff; --text:#111827; --card:#f8fafc; --border:#e5e7eb }
-    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;background:var(--bg);color:var(--text)}
-    a{color:inherit;text-decoration:none} button{cursor:pointer;border:none;font:inherit}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;background:var(--bg);color:var(--text)}
+    a{color:inherit;text-decoration:none}
+    button{cursor:pointer;border:none;font:inherit;background:transparent;color:var(--text)}
     input,textarea,select{font:inherit;color:inherit;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;width:100%}
+
     header{position:sticky;top:0;z-index:50;backdrop-filter:saturate(180%) blur(8px);background:color-mix(in hsl,var(--bg) 86%,transparent);border-bottom:1px solid var(--border)}
     .wrap{max-width:1100px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:12px}
     .logo{height:36px;animation:twinkle 2.6s ease-in-out infinite}
-    @keyframes twinkle{
-      0%,100%{filter:drop-shadow(0 0 0 rgba(255,255,255,0)) brightness(1)}
-      7%{filter:drop-shadow(0 0 8px rgba(255,255,255,.45)) brightness(1.14)}
-      22%{filter:drop-shadow(0 0 10px rgba(255,255,255,.5)) brightness(1.18)}
-      51%{filter:drop-shadow(0 0 7px rgba(255,255,255,.4)) brightness(1.12)}
-      78%{filter:drop-shadow(0 0 9px rgba(255,255,255,.45)) brightness(1.14)}
-    }
-    .title{font-weight:700} .grow{flex:1}
+    @keyframes twinkle{0%,100%{filter:drop-shadow(0 0 0 rgba(255,255,255,0)) brightness(1)}7%{filter:drop-shadow(0 0 8px rgba(255,255,255,.45)) brightness(1.14)}22%{filter:drop-shadow(0 0 10px rgba(255,255,255,.5)) brightness(1.18)}51%{filter:drop-shadow(0 0 7px rgba(255,255,255,.4)) brightness(1.12)}78%{filter:drop-shadow(0 0 9px rgba(255,255,255,.45)) brightness(1.14)}}
+    .title{font-weight:700}
+    .grow{flex:1}
     .btn{background:var(--navy);color:#fff;border-radius:999px;padding:10px 16px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 16px rgba(11,61,145,.25)}
+    .icon-btn{border:1px solid var(--border);border-radius:12px;padding:8px 10px;display:inline-flex;align-items:center;justify-content:center}
+    .icon{width:18px;height:18px;display:block}
     main{max-width:1100px;margin:0 auto;padding:18px 16px 90px}
-    .grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)} @media(min-width:720px){.grid{grid-template-columns:repeat(3,1fr)}}
+
+    .grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+    @media(min-width:720px){.grid{grid-template-columns:repeat(3,1fr)}}
     .card{position:relative;border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--card)}
     .card img{width:100%;height:170px;object-fit:cover;display:block}
     .card .name{position:absolute;left:10px;bottom:10px;padding:8px 12px;border-radius:999px;background:color-mix(in hsl,var(--bg) 65%,rgba(0,0,0,.5));border:1px solid var(--border);font-weight:700}
+
     .back{display:inline-flex;align-items:center;gap:8px;margin-bottom:10px}
     .space-hero{display:grid;gap:12px;grid-template-columns:120px 1fr;align-items:center}
     .space-hero img{width:120px;height:80px;object-fit:cover;border-radius:12px;border:1px solid var(--border)}
     .space-hero .nm{font-size:1.25rem;font-weight:800}
+
     .calendar{margin-top:14px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--card)}
     .cal-head{display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid var(--border)}
     .cal-nav{display:flex;gap:8px}
-    .cal-btn{background:transparent;border:1px solid var(--border);border-radius:12px;padding:8px 10px}
     .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:12px}
     .dow{font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em}
     .cell{aspect-ratio:1/1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;border:1px solid var(--border);user-select:none}
     .cell.free{background:color-mix(in hsl,var(--ok) 18%,transparent);color:#10b981;border-style:dashed}
-    .cell.busy{background:#2b2f36;color:#94a3b8} body.light .cell.busy{background:#e5e7eb;color:#475569}
-    .cell.dim{opacity:.45} .cell.clickable{cursor:pointer}
+    .cell.busy{background:#2b2f36;color:#94a3b8}
+    body.light .cell.busy{background:#e5e7eb;color:#475569}
+    .cell.dim{opacity:.45}
+    .cell.clickable{cursor:pointer}
+
     .legend{display:flex;gap:10px;align-items:center;padding:8px 12px 14px}
-    .dot{width:14px;height:14px;border-radius:4px;border:1px solid var(--border)} .dot.free{background:color-mix(in hsl,var(--ok) 40%,transparent)} .dot.busy{background:#2b2f36} body.light .dot.busy{background:#e5e7eb}
+    .dot{width:14px;height:14px;border-radius:4px;border:1px solid var(--border)}
+    .dot.free{background:color-mix(in hsl,var(--ok) 40%,transparent)}
+    .dot.busy{background:#2b2f36}
+    body.light .dot.busy{background:#e5e7eb}
+
     .list{margin-top:14px;border:1px solid var(--border);border-radius:16px;background:var(--card);overflow:hidden}
     .list h3{margin:0;padding:12px;border-bottom:1px solid var(--border)}
     .row{display:grid;grid-template-columns:180px 1fr;gap:8px;padding:12px;border-top:1px dashed var(--border)}
-    .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#0f172a;color:#cbd5e1;border:1px solid var(--border);font-size:13px} body.light .badge{background:#f1f5f9;color:#334155}
+    .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#0f172a;color:#cbd5e1;border:1px solid var(--border);font-size:13px}
+    body.light .badge{background:#f1f5f9;color:#334155}
     .empty{padding:12px;color:#94a3b8}
+
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:60;padding:20px}
     .modal.open{display:flex}
-    .sheet{width:100%;max-width:620px;background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden}
-    .sheet header{position:relative;backdrop-filter:none;background:var(--card);border-bottom:1px solid var(--border)}
+    .sheet{width:100%;max-width:760px;background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden}
+    .sheet header{position:relative;background:var(--card);border-bottom:1px solid var(--border)}
     .sheet .wrap{padding:14px}
     .sheet .content{padding:14px;display:grid;gap:10px}
-    .sheet .actions{padding:12px 14px 16px;display:flex;gap:10px;justify-content:flex-end}
+    .sheet .actions{padding:12px 14px 16px;display:flex;gap:10px;justify-content:space-between;align-items:center;border-top:1px solid var(--border)}
     .danger{color:var(--danger)}
     .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:#0a0a0a;color:#e5e7eb;padding:10px 14px;border-radius:999px;border:1px solid var(--border);box-shadow:0 10px 28px rgba(0,0,0,.5);display:none;z-index:70}
     body.light .toast{background:#111827}
+
     .slot-list{display:grid;gap:8px}
     .slot-item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:var(--card)}
     .slot-free{border-style:dashed;box-shadow:inset 0 0 0 1px rgba(22,163,74,.15)}
-    .slot-txt{font-weight:600} .slot-sub{font-size:12px;color:#94a3b8}
+    .slot-txt{font-weight:600}
+    .slot-sub{font-size:12px;color:#94a3b8}
     .slot-btn{padding:8px 12px;border-radius:10px;background:var(--navy);color:#fff}
     .slot-busy{opacity:.9}
     .time-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+    /* chips da tarde */
+    .af-grid{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
+    @media(min-width:720px){.af-grid{grid-template-columns:repeat(3,1fr)}}
+    .chip{padding:8px 10px;border:1px solid var(--border);border-radius:10px;text-align:center}
+    .chip.free{cursor:pointer}
+    .chip.busy{opacity:.5}
+    .chip.selected{outline:2px solid var(--navy); background:color-mix(in hsl,var(--navy) 10%, transparent)}
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <div class="logo-wrap">
-        <img id="logo" class="logo" src="logo.png" alt="IAPE" />
-        <div class="title">IAPE • Agendamento de Espaços</div>
-      </div>
+      <img id="logo" class="logo" src="logo.png" alt="IAPE" />
+      <div class="title">IAPE • Agendamento de Espaços</div>
       <div class="grow"></div>
       <button id="themeToggle" class="btn" aria-label="Alternar tema">🌓&nbsp;Tema</button>
     </div>
@@ -107,42 +124,51 @@
     </section>
   </main>
 
-  <!-- SLOTS DO DIA -->
+  <!-- SLOTS DO DIA (multi-seleção) -->
   <div id="slotsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="slotsTitle">
     <div class="sheet">
       <header>
-        <div class="wrap"><strong id="slotsTitle">Horários do dia</strong><div class="grow"></div><button class="cal-btn" id="closeSlots">✖</button></div>
+        <div class="wrap">
+          <strong id="slotsTitle">Horários do dia</strong>
+          <div class="grow"></div>
+          <button class="icon-btn" id="closeSlots" aria-label="Fechar">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
       </header>
       <div class="content">
         <div id="slotsDateLabel" class="badge">Data: —</div>
-        <div id="morningList" class="slot-list"></div>
-
-        <div class="list" style="border:none;background:transparent">
-          <h3 style="padding:0;margin:6px 0 4px">Período da tarde</h3>
-          <div class="slot-item slot-free">
-            <div>
-              <div class="slot-txt">Escolher intervalo livre</div>
-              <div class="slot-sub" id="afWindowLabel">—</div>
-              <div class="time-row" style="margin-top:6px">
-                <input id="afStart" type="time" step="300">
-                <span>—</span>
-                <input id="afEnd" type="time" step="300">
-              </div>
-              <div id="afHint" class="slot-sub" style="margin-top:6px">Duração mínima 30 minutos.</div>
-            </div>
-            <div><button id="btnAfReserve" class="slot-btn">Reservar período</button></div>
-          </div>
-          <div id="afExisting" class="slot-list" style="margin-top:8px"></div>
+        <div>
+          <h3 style="margin:8px 0 6px">Manhã</h3>
+          <div id="morningList" class="slot-list"></div>
+        </div>
+        <div>
+          <h3 style="margin:12px 0 6px">Tarde (13:00–22:00) — blocos de 30 min</h3>
+          <div id="afGrid" class="af-grid"></div>
+          <div id="afInfo" class="slot-sub" style="margin-top:6px"></div>
+        </div>
+      </div>
+      <div class="actions">
+        <div id="selSummary" class="slot-sub">0 horários selecionados</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button id="clearSel" class="icon-btn" title="Limpar seleção">Limpar</button>
+          <button id="goReserve" class="btn" disabled>Reservar selecionados</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: salvar reserva (reaproveitado p/ manhã e tarde) -->
+  <!-- MODAL: nome + atividade (aplica a todos selecionados) -->
   <div id="reserveModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="reserveTitle">
     <div class="sheet">
       <header>
-        <div class="wrap"><strong id="reserveTitle">Confirmar reserva</strong><div class="grow"></div><button class="cal-btn" id="closeReserve">✖</button></div>
+        <div class="wrap">
+          <strong id="reserveTitle">Confirmar reserva</strong>
+          <div class="grow"></div>
+          <button class="icon-btn" id="closeReserve" aria-label="Fechar">
+            <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
       </header>
       <div class="content">
         <div id="reserveMeta" class="badge">—</div>
@@ -151,7 +177,8 @@
         <div id="reserveError" class="danger" style="display:none"></div>
       </div>
       <div class="actions">
-        <button id="btnSalvar" class="btn">Salvar reserva</button>
+        <div class="slot-sub" id="reserveCount">—</div>
+        <button id="btnSalvar" class="btn">Salvar reservas</button>
       </div>
     </div>
   </div>
@@ -161,11 +188,9 @@
 <script>
 /* ========= CONFIG ========= */
 const API_BASE = "https://script.google.com/macros/s/AKfycbz22XIFYP3peSY7sCcO6Vg6CxtBByMGB7GY_MzUYEKSBVLSLisxh3NIjMve23zMG4VM/exec";
-
-// janela padrão da tarde (pode ajustar)
 const AFTERNOON_START = "13:00";
-const AFTERNOON_END   = "18:00";
-const MIN_RANGE_MIN   = 30; // duração mínima em minutos
+const AFTERNOON_END   = "22:00"; // até as 22h
+const BLOCK_MIN      = 30;       // blocos de 30 min
 
 const SPACES = [
   { name: "Sala Maker", slug: "sala-maker", img: "assets/sala-maker.jpg" },
@@ -179,7 +204,6 @@ const SPACES = [
   { name: "Auditório Central", slug: "auditorio-central", img: "assets/auditorio-central.jpg" },
 ];
 
-// Horários da manhã (SEG–QUA iguais; QUI/SEX diferentes; intervalo 08:45–09:05 oculto)
 const TIMESLOTS = {
   MON: [
     { id:"1", label:"1ª aula", start:"07:15", end:"08:00" },
@@ -216,19 +240,16 @@ const TIMESLOTS = {
 /* ===== Helpers ===== */
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
-const state = { route:{page:'home',space:null}, month:new Date(), reservations:[], selectedDay:null, pending:null };
+const state = { route:{page:'home',space:null}, month:new Date(), reservations:[], selectedDay:null, selections:[] };
 
 function fmtDateISO(d){ return d.toISOString().slice(0,10); }
 function fmtBR(iso){ return new Date(iso+"T00:00:00").toLocaleDateString('pt-BR',{timeZone:'America/Recife'}); }
-function dayKey(d){ return ['SUN','MON','TUE','WED','THU','FRI','SAT'][new Date(d+"T00:00:00").getDay()]; }
+function dayKey(iso){ return ['SUN','MON','TUE','WED','THU','FRI','SAT'][new Date(iso+"T00:00:00").getDay()]; }
 function slotsForDate(iso){ const key = dayKey(iso); return (TIMESLOTS[key]||[]).map(s=>({...s, slotKey:`${s.start}-${s.end}`})); }
-function parseMin(hhmm){ const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
+function parseMin(hhmm){ const [h,m]=String(hhmm).split(':').map(Number); return (isFinite(h)&&isFinite(m)) ? h*60+m : 0; }
 function minToHHMM(n){ const h=String(Math.floor(n/60)).padStart(2,'0'); const m=String(n%60).padStart(2,'0'); return `${h}:${m}`; }
-function intervalsOverlap(aStart,aEnd,bStart,bEnd){ return aStart < bEnd && bStart < aEnd; }
-function mergeIntervals(intervals){ if(!intervals.length) return []; intervals.sort((a,b)=>a[0]-b[0]); const out=[intervals[0].slice()]; for(let i=1;i<intervals.length;i++){const [s,e]=intervals[i]; const last=out[out.length-1]; if(s<=last[1]) last[1]=Math.max(last[1],e); else out.push([s,e]); } return out; }
-function availableGaps(startMin,endMin,takenIntervals){ const merged=mergeIntervals(takenIntervals.filter(t=>t[1]>startMin && t[0]<endMin).map(t=>[Math.max(t[0],startMin), Math.min(t[1],endMin)])); const gaps=[]; let cur=startMin; for(const [s,e] of merged){ if(cur<s) gaps.push([cur,s]); cur=Math.max(cur,e); } if(cur<endMin) gaps.push([cur,endMin]); return gaps; }
-
-function setTheme(theme){ if(theme==='light') document.body.classList.add('light'); else document.body.classList.remove('light'); localStorage.setItem('iape-theme',theme); }
+function intervalsOverlap(aS,aE,bS,bE){ return aS < bE && bS < aE; }
+function setTheme(t){ if(t==='light') document.body.classList.add('light'); else document.body.classList.remove('light'); localStorage.setItem('iape-theme',t); }
 (function(){ const saved=localStorage.getItem('iape-theme'); if(saved) setTheme(saved); })();
 $('#themeToggle').addEventListener('click',()=> setTheme(document.body.classList.contains('light')?'dark':'light'));
 
@@ -252,31 +273,36 @@ function renderHome(){
 function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
 function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
 
+function halfHourBlocks(){
+  const s=parseMin(AFTERNOON_START), e=parseMin(AFTERNOON_END); const out=[];
+  for(let t=s; t<e; t+=BLOCK_MIN){ out.push({ start:minToHHMM(t), end:minToHHMM(t+BLOCK_MIN) }); }
+  return out;
+}
+
 function dayHasAvailability(iso){
-  // manhã: se existir algum slot não reservado
   const slots=slotsForDate(iso);
   const takenKeys=new Set(state.reservations.filter(r=>r.date===iso && r.type==='slot').map(r=>r.slot_key));
-  const morningFree = slots.some(s=>!takenKeys.has(s.slotKey));
-  if(morningFree) return true;
-
-  // tarde: se existir algum gap >= MIN_RANGE_MIN
-  const afS=parseMin(AFTERNOON_START), afE=parseMin(AFTERNOON_END);
-  const taken = state.reservations.filter(r=>r.date===iso).map(r=>[parseMin(r.start), parseMin(r.end)]);
-  const gaps = availableGaps(afS, afE, taken);
-  return gaps.some(([s,e]) => e - s >= MIN_RANGE_MIN);
+  if (slots.some(s=>!takenKeys.has(s.slotKey))) return true;
+  // tarde
+  const blocks=halfHourBlocks();
+  const todays=state.reservations.filter(r=>r.date===iso);
+  return blocks.some(b=> !todays.some(r=> intervalsOverlap(parseMin(b.start),parseMin(b.end),parseMin(r.start),parseMin(r.end))));
 }
 
 function renderCalendar(){
   const wrap=$('#calendar'); wrap.innerHTML='';
   const month=state.month; const monthName=month.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
-
   const head=document.createElement('div'); head.className='cal-head';
   head.innerHTML=`
-    <button class="cal-btn" id="prevM">◀</button>
+    <button class="icon-btn" id="prevM" aria-label="Mês anterior">
+      <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
     <div><strong>${monthName}</strong></div>
     <div class="cal-nav">
-      <button class="cal-btn" id="todayBtn">Hoje</button>
-      <button class="cal-btn" id="nextM">▶</button>
+      <button class="icon-btn" id="todayBtn" aria-label="Hoje">Hoje</button>
+      <button class="icon-btn" id="nextM" aria-label="Próximo mês">
+        <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
     </div>`;
   wrap.appendChild(head);
   $('#prevM').addEventListener('click',()=>{ state.month=new Date(month.getFullYear(),month.getMonth()-1,1); loadReservations().then(renderCalendar); });
@@ -288,19 +314,14 @@ function renderCalendar(){
 
   const first=startOfMonth(month), last=endOfMonth(month);
   for(let i=0;i<first.getDay();i++){ const c=document.createElement('div'); c.className='cell dim'; grid.appendChild(c); }
-
   for(let d=1; d<=last.getDate(); d++){
     const date=new Date(month.getFullYear(), month.getMonth(), d); const iso=fmtDateISO(date);
     const free=dayHasAvailability(iso);
     const cell=document.createElement('div'); cell.className=`cell ${free?'free':'busy'} clickable`; cell.textContent=d;
-    cell.addEventListener('click',()=> openSlotsModal(iso));
-    grid.appendChild(cell);
+    cell.addEventListener('click',()=> openSlotsModal(iso)); grid.appendChild(cell);
   }
   wrap.appendChild(grid);
-
-  const legend=document.createElement('div'); legend.className='legend';
-  legend.innerHTML=`<span class="dot free"></span> Há horários livres <span class="dot busy" style="margin-left:12px"></span> Sem disponibilidade`;
-  wrap.appendChild(legend);
+  const legend=document.createElement('div'); legend.className='legend'; legend.innerHTML=`<span class="dot free"></span> Há horários livres <span class="dot busy" style="margin-left:12px"></span> Sem disponibilidade`; wrap.appendChild(legend);
 }
 
 /* ===== List (mês) ===== */
@@ -310,7 +331,7 @@ function renderList(){
   const sorted=[...state.reservations].sort((a,b)=> a.date===b.date ? (parseMin(a.start)-parseMin(b.start)) : a.date.localeCompare(b.date));
   sorted.forEach(r=>{
     const row=document.createElement('div'); row.className='row';
-    const label = r.type==='slot' ? `${r.slot_label} (${r.start}-${r.end})` : `Tarde: ${r.start}–${r.end}`;
+    const label = r.type==='slot' ? `${r.slot_label} (${r.start}-${r.end})` : `${r.start}–${r.end}`;
     row.innerHTML = `<div class="badge">${fmtBR(r.date)} • ${label}</div>
       <div><div><strong>Solicitante:</strong> ${esc(r.solicitante)}</div>
       <div style="margin-top:4px"><strong>Atividade:</strong> ${esc(r.atividade)}</div></div>`;
@@ -318,119 +339,94 @@ function renderList(){
   });
 }
 
-/* ===== Slots modal ===== */
+/* ===== Slots modal (multi-seleção) ===== */
 const slotsModal = $('#slotsModal'); const closeSlots = ()=> slotsModal.classList.remove('open'); $('#closeSlots').addEventListener('click', closeSlots);
+function resetSelection(){ state.selections=[]; updateSelSummary(); }
+function isSelected(start,end){ return state.selections.some(it=>it.start===start && it.end===end); }
+function toggleSelection(item){
+  const idx = state.selections.findIndex(it=>it.start===item.start && it.end===item.end);
+  if(idx>=0) state.selections.splice(idx,1); else state.selections.push(item);
+  updateSelSummary();
+}
+function updateSelSummary(){
+  $('#selSummary').textContent = `${state.selections.length} horário(s) selecionado(s)`;
+  $('#goReserve').disabled = state.selections.length===0;
+}
+
 function openSlotsModal(iso){
-  state.selectedDay=iso; $('#slotsDateLabel').textContent=`Data: ${fmtBR(iso)}`;
-  renderMorningSlots(); renderAfternoonSection(); slotsModal.classList.add('open');
-}
-function renderMorningSlots(){
-  const iso=state.selectedDay; const cont=$('#morningList'); cont.innerHTML='';
-  const slots=slotsForDate(iso); const taken=new Set(state.reservations.filter(r=>r.date===iso && r.type==='slot').map(r=>r.slot_key));
-  slots.forEach(s=>{
-    const isFree=!taken.has(s.slotKey);
-    const item=document.createElement('div'); item.className=`slot-item ${isFree?'slot-free':'slot-busy'}`;
-    const left=document.createElement('div'); left.innerHTML=`<div class="slot-txt">${esc(s.label)} — ${s.start}–${s.end}</div>`;
-    const right=document.createElement('div');
-    if(isFree){
-      const b=document.createElement('button'); b.className='slot-btn'; b.textContent='Reservar';
-      b.addEventListener('click',()=> openReserveModal({
-        type:'slot', date: iso,
-        start: s.start, end: s.end,
-        slot_key: s.slotKey, slot_label: `${s.label}`
-      }));
-      right.appendChild(b);
-    } else {
-      const r=state.reservations.find(x=>x.date===iso && x.slot_key===s.slotKey);
-      left.innerHTML+=`<div class="slot-sub">Reservado por ${esc(r.solicitante)} — ${esc(r.atividade)}</div>`;
-    }
-    item.appendChild(left); item.appendChild(right); cont.appendChild(item);
-  });
-}
-function renderAfternoonSection(){
-  const iso=state.selectedDay;
-  $('#afWindowLabel').textContent = `Faixa livre configurável, entre ${AFTERNOON_START} e ${AFTERNOON_END}`;
-  const afS=parseMin(AFTERNOON_START), afE=parseMin(AFTERNOON_END);
-
-  // listar reservas existentes (manhã+eventuais tardes)
-  const takenToday = state.reservations.filter(r=>r.date===iso).map(r=>[parseMin(r.start), parseMin(r.end)]);
-  const gaps = availableGaps(afS, afE, takenToday);
-  const gapTxt = gaps.length ? `Janelas livres: ${gaps.map(([s,e])=>`${minToHHMM(s)}–${minToHHMM(e)}`).join(', ')}` : 'Nenhuma janela livre.';
-  $('#afHint').textContent = `Duração mínima ${MIN_RANGE_MIN} min. ${gapTxt}`;
-
-  // preencher inputs com primeira janela livre
-  const afStart = $('#afStart'), afEnd=$('#afEnd');
-  if(gaps.length){ afStart.value = minToHHMM(gaps[0][0]); afEnd.value = minToHHMM(Math.min(gaps[0][0]+MIN_RANGE_MIN, gaps[0][1])); }
-  else { afStart.value=AFTERNOON_START; afEnd.value=AFTERNOON_START; }
-
-  afStart.min=AFTERNOON_START; afStart.max=AFTERNOON_END;
-  afEnd.min=AFTERNOON_START; afEnd.max=AFTERNOON_END;
-
-  // lista de reservas já feitas na tarde
-  const list=$('#afExisting'); list.innerHTML='';
-  const todays = state.reservations.filter(r=>r.date===iso && parseMin(r.end)>afS);
-  if(!todays.length){ const div=document.createElement('div'); div.className='slot-sub'; div.textContent='Nenhuma reserva na tarde.'; list.appendChild(div); }
-  todays.sort((a,b)=>parseMin(a.start)-parseMin(b.start)).forEach(r=>{
-    const item=document.createElement('div'); item.className='slot-item slot-busy';
-    item.innerHTML = `<div><div class="slot-txt">${r.type==='slot'?'Manhã':'Tarde'} — ${r.start}–${r.end}</div>
-      <div class="slot-sub">Reservado por ${esc(r.solicitante)} — ${esc(r.atividade)}</div></div>`;
-    list.appendChild(item);
-  });
-
-  $('#btnAfReserve').onclick = ()=>{
-    const s=afStart.value, e=afEnd.value;
-    const sm=parseMin(s||'00:00'), em=parseMin(e||'00:00');
-    if(!s || !e || sm>=em){ return toast('Escolha um intervalo válido.'); }
-    if(sm<afS || em>afE){ return toast('Fora da janela configurada da tarde.'); }
-    if(em-sm < MIN_RANGE_MIN){ return toast(`Mínimo de ${MIN_RANGE_MIN} minutos.`); }
-    const conflict = takenToday.some(([ts,te])=> intervalsOverlap(sm,em,ts,te));
-    if(conflict){ return toast('Conflito com outra reserva. Ajuste o horário.'); }
-
-    openReserveModal({
-      type:'range', date: iso, start: s, end: e,
-      slot_key:'', slot_label:'Período da tarde'
-    });
+  state.selectedDay=iso; resetSelection();
+  $('#slotsDateLabel').textContent=`Data: ${fmtBR(iso)}`;
+  renderMorningList(); renderAfternoonGrid();
+  slotsModal.classList.add('open');
+  $('#clearSel').onclick = ()=>{ resetSelection(); renderMorningList(); renderAfternoonGrid(); };
+  $('#goReserve').onclick = ()=>{
+    const span = `${fmtBR(iso)} • ${state.selections.length} horário(s)`;
+    $('#reserveMeta').textContent = span; $('#reserveCount').textContent = `${state.selections.length} horário(s) serão reservados`;
+    $('#reserveError').style.display='none'; $('#inpSolicitante').value=''; $('#inpAtividade').value='';
+    reserveModal.classList.add('open'); setTimeout(()=>$('#inpSolicitante').focus(),60);
   };
 }
 
-/* ===== Reserva modal ===== */
-const reserveModal=$('#reserveModal'); const closeReserve=()=>reserveModal.classList.remove('open'); $('#closeReserve').addEventListener('click',closeReserve);
-function openReserveModal(meta){
-  state.pending = meta;
-  const label = meta.type==='slot' ? `${fmtBR(meta.date)} • ${meta.slot_label} (${meta.start}-${meta.end})` : `${fmtBR(meta.date)} • Tarde ${meta.start}-${meta.end}`;
-  $('#reserveMeta').textContent = label;
-  $('#reserveError').style.display='none';
-  $('#inpSolicitante').value=''; $('#inpAtividade').value='';
-  reserveModal.classList.add('open');
-  setTimeout(()=>$('#inpSolicitante').focus(),60);
+function renderMorningList(){
+  const iso=state.selectedDay; const cont=$('#morningList'); cont.innerHTML='';
+  const slots=slotsForDate(iso); const taken=new Set(state.reservations.filter(r=>r.date===iso && r.type==='slot').map(r=>r.slot_key));
+  slots.forEach(s=>{
+    const busy = taken.has(s.slotKey);
+    const selected = isSelected(s.start,s.end);
+    const item=document.createElement('div'); item.className=`slot-item ${busy?'slot-busy':'slot-free'}`;
+    const left=document.createElement('div'); left.innerHTML=`<div class="slot-txt">${esc(s.label)} — ${s.start}–${s.end}</div>`;
+    const right=document.createElement('div');
+    const btn=document.createElement('button'); btn.className='slot-btn'; btn.textContent = selected? 'Remover' : (busy?'Indisponível':'Selecionar');
+    btn.disabled = busy;
+    btn.addEventListener('click', ()=>{ toggleSelection({type:'slot', start:s.start, end:s.end, slot_key:s.slotKey, slot_label:s.label}); renderMorningList(); });
+    right.appendChild(btn);
+    item.appendChild(left); item.appendChild(right); cont.appendChild(item);
+  });
 }
-$('#btnSalvar').addEventListener('click', async ()=>{
-  const solicitante=$('#inpSolicitante').value.trim();
-  const atividade=$('#inpAtividade').value.trim();
-  if(!solicitante || !atividade){ err('Preencha todas as informações.'); return; }
-  const slug=state.route.space; const p=state.pending; if(!slug || !p) return;
 
+function renderAfternoonGrid(){
+  const iso=state.selectedDay; const grid=$('#afGrid'); grid.innerHTML='';
+  const blocks=halfHourBlocks();
+  const todays=state.reservations.filter(r=>r.date===iso);
+  let freeCount=0;
+  blocks.forEach(b=>{
+    const busy = todays.some(r=> intervalsOverlap(parseMin(b.start),parseMin(b.end),parseMin(r.start),parseMin(r.end)));
+    const selected = isSelected(b.start,b.end);
+    const div=document.createElement('div'); div.className='chip ' + (busy?'busy':'free') + (selected?' selected':'');
+    div.textContent = `${b.start}–${b.end}`;
+    if(!busy){ div.addEventListener('click', ()=>{ toggleSelection({type:'range', start:b.start, end:b.end, slot_key:'', slot_label:'Tarde'}); renderAfternoonGrid(); }); }
+    if(!busy) freeCount++;
+    grid.appendChild(div);
+  });
+  $('#afInfo').textContent = freeCount? `${freeCount} blocos livres de 30 min` : 'Nenhum bloco livre na tarde';
+}
+
+/* ===== Reserva (batch) ===== */
+const reserveModal=$('#reserveModal'); const closeReserve=()=> reserveModal.classList.remove('open'); $('#closeReserve').addEventListener('click',closeReserve);
+$('#btnSalvar').addEventListener('click', async (ev)=>{
+  const btn=ev.currentTarget; btn.disabled=true; btn.textContent='Salvando...';
   try{
-    await loadReservations(); // refetch para última visão
-    // valida conflito local
-    const todays=state.reservations.filter(r=>r.date===p.date).map(r=>[parseMin(r.start), parseMin(r.end)]);
-    if(todays.some(([s,e])=> intervalsOverlap(parseMin(p.start),parseMin(p.end),s,e))){ err('Este horário acabou de ser reservado.'); return; }
+    const solicitante=$('#inpSolicitante').value.trim(); const atividade=$('#inpAtividade').value.trim();
+    if(!solicitante || !atividade){ showErr('Preencha todas as informações.'); return; }
+    const slug=state.route.space; const iso=state.selectedDay; if(!slug||!iso||!state.selections.length){ return; }
 
-    await apiCreate({
-      space: slug, date: p.date,
-      type: p.type, start: p.start, end: p.end,
-      slot_key: p.slot_key || '', slot_label: p.slot_label || '',
-      solicitante, atividade
-    });
+    // valida contra reservas atuais (último estado)
+    await loadReservations();
+    const todays=state.reservations.filter(r=>r.date===iso);
+    const conflictLocal = state.selections.some(it=> todays.some(r=> intervalsOverlap(parseMin(it.start),parseMin(it.end),parseMin(r.start),parseMin(r.end))));
+    if(conflictLocal){ showErr('Algum horário selecionado foi reservado agora há pouco. Reabra os horários e tente novamente.'); return; }
 
-    toast('Reservado com sucesso!');
-    closeReserve(); closeSlots();
+    const items = state.selections.map(it=> ({ type: it.type, start: it.start, end: it.end, slot_key: it.slot_key||'', slot_label: it.slot_label||'' }));
+    await apiCreateBatch({ space: slug, date: iso, solicitante, atividade, items: JSON.stringify(items) });
+
+    toast('Reservas salvas!'); reserveModal.classList.remove('open'); closeSlots();
     await loadReservations(); renderCalendar(); renderList();
-  }catch(e){ err(e.message||'Falha ao salvar.'); }
+  }catch(e){ showErr(e.message||'Falha ao salvar.'); }
+  finally{ btn.disabled=false; btn.textContent='Salvar reservas'; }
 });
-function err(m){ $('#reserveError').textContent=m; $('#reserveError').style.display='block'; }
+function showErr(m){ $('#reserveError').textContent=m; $('#reserveError').style.display='block'; }
 function toast(m){ const t=$('#toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2000); }
-function esc(s){ return String(s||'').replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function esc(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 /* ===== API ===== */
 async function apiList(space,year,month){
@@ -440,28 +436,14 @@ async function apiList(space,year,month){
   if(!res.ok || data.ok===false) throw new Error(data.message||'Erro ao carregar.');
   return data.reservations||[];
 }
-// POST sem preflight
-async function apiCreate(payload){
-  const params = new URLSearchParams();
-  Object.entries(payload).forEach(([k,v])=> params.append(k, v));
-  const res = await fetch(API_BASE, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' },
-    body: params.toString()
-  });
+async function apiCreateBatch(payload){
+  const params = new URLSearchParams(); Object.entries(payload).forEach(([k,v])=> params.append(k, v));
+  const res = await fetch(API_BASE, { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' }, body: params.toString() });
   const data = await res.json().catch(()=> ({}));
-  if(!res.ok || data.ok===false){
-    const msg=(data&&data.message)||'Erro ao salvar.'; 
-    if(/Conflito/i.test(msg)) throw new Error('Conflito: horário já reservado.');
-    throw new Error(msg);
-  }
+  if(!res.ok || data.ok===false){ const msg=(data&&data.message)||'Erro ao salvar.'; if(/Conflito/i.test(msg)) throw new Error(msg); throw new Error(msg); }
   return data;
 }
-async function loadReservations(){
-  const slug=state.route.space; if(!slug) return;
-  const y=state.month.getFullYear(), m=state.month.getMonth()+1;
-  state.reservations = await apiList(slug,y,m);
-}
+async function loadReservations(){ const slug=state.route.space; if(!slug) return; const y=state.month.getFullYear(), m=state.month.getMonth()+1; state.reservations = await apiList(slug,y,m); }
 
 /* ===== Space view ===== */
 function renderSpace(){
@@ -471,7 +453,7 @@ function renderSpace(){
   renderCalendar(); renderList(); $('#home').hidden=true; $('#spaceView').hidden=false;
 }
 
-/* ===== Root render & boot ===== */
+/* ===== Root ===== */
 function render(){ if(state.route.page==='home') renderHome(); else renderSpace(); }
 function boot(){
   renderHome();
@@ -482,4 +464,3 @@ boot();
 </script>
 </body>
 </html>
-
