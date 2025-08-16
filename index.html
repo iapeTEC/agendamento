@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agendamento de Espaços</title>
-  <meta name="theme-color" content="#0b3d91" />
+  <title>Iape - Agendamento de Espaços</title>
+  <meta name="theme-color" content="#0B1D39" />
   <!-- Performance: conexão antecipada com Apps Script -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="dns-prefetch" href="//script.google.com">
@@ -13,10 +13,10 @@
   <link rel="alternate icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
   <link rel="manifest" href="site.webmanifest">
-  <link rel="mask-icon" href="safari-pinned-tab.svg" color="#0b3d91">
-  <meta name="msapplication-TileColor" content="#0b3d91">
+  <link rel="mask-icon" href="safari-pinned-tab.svg" color="#0B1D39">
+  <meta name="msapplication-TileColor" content="#0B1D39">
   <style>
-    :root{ --navy:#0b3d91; --ok:#16a34a; --muted:#cbd5e1; --danger:#ef4444; --bg:#000; --text:#e5e7eb; --card:#0b0b0b; --border:#1f2937; }
+    :root{ --navy:#0B1D39; --ok:#16a34a; --muted:#cbd5e1; --danger:#ef4444; --bg:#000; --text:#e5e7eb; --card:#0b0b0b; --border:#1f2937; }
     body.light{ --bg:#fff; --text:#111827; --card:#f8fafc; --border:#e5e7eb }
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial;background:var(--bg);color:var(--text)}
@@ -30,7 +30,7 @@
     @keyframes twinkle{0%,100%{filter:drop-shadow(0 0 0 rgba(255,255,255,0)) brightness(1)}7%{filter:drop-shadow(0 0 8px rgba(255,255,255,.45)) brightness(1.14)}22%{filter:drop-shadow(0 0 10px rgba(255,255,255,.5)) brightness(1.18)}51%{filter:drop-shadow(0 0 7px rgba(255,255,255,.4)) brightness(1.12)}78%{filter:drop-shadow(0 0 9px rgba(255,255,255,.45)) brightness(1.14)}}
     .title{font-weight:700}
     .grow{flex:1}
-    .btn{background:var(--navy);color:#fff;border-radius:999px;padding:10px 16px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 16px rgba(11,61,145,.25)}
+    .btn{background:var(--navy);color:#fff;border-radius:999px;padding:10px 16px;display:inline-flex;align-items:center;gap:8px;box-shadow:0 8px 16px rgba(11,29,57,0.25)}
     .icon-btn{border:1px solid var(--border);border-radius:12px;padding:8px 10px;display:inline-flex;align-items:center;justify-content:center}
     .icon{width:18px;height:18px;display:block}
     main{max-width:1100px;margin:0 auto;padding:18px 16px 90px}
@@ -105,9 +105,9 @@
   <header>
     <div class="wrap">
       <img id="logo" class="logo" src="logo3.png" alt="IAPE" />
-      <div class="title">IAPE • Agendamento de Espaços</div>
+      <div class="title">Agendamento de Espaços</div>
       <div class="grow"></div>
-      <button id="themeToggle" class="btn" aria-label="Alternar tema">🌓&nbsp;Tema</button>
+      <button id="themeToggle" class="btn" aria-label="Alternar tema">🌓</button>
     </div>
   </header>
 
@@ -513,4 +513,5 @@ boot();
 </script>
 </body>
 </html>
+
 
