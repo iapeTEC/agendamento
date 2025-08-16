@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-<head>
+<head> 
+ <link rel="icon" href="favicon.svg" type="image/svg+xml">
+ <link rel="alternate icon" href="favicon.ico">
+ <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+ <link rel="manifest" href="site.webmanifest">
+ <link rel="mask-icon" href="safari-pinned-tab.svg" color="#0b3d91">
+ <meta name="msapplication-TileColor" content="#0b3d91">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>IAPE • Agendamento de Espaços</title>
@@ -143,7 +149,7 @@
           <div id="morningList" class="slot-list"></div>
         </div>
         <div>
-          <h3 style="margin:12px 0 6px">Tarde (13:00–18:00) — blocos de 30 min</h3>
+          <h3 style="margin:12px 0 6px">Tarde (13:00–22:00) — blocos de 30 min</h3>
           <div id="afGrid" class="af-grid"></div>
           <div id="afInfo" class="slot-sub" style="margin-top:6px"></div>
         </div>
@@ -187,9 +193,9 @@
 
 <script>
 /* ========= CONFIG ========= */
-const API_BASE = "https://script.google.com/macros/s/AKfycbwuluA4Eyw_cYc1RGGNvOAwZrzxtaaLzprChsY5UDYDUoStI5wenVkXTQjIdPW_eaEn/exec";
+const API_BASE = "https://script.google.com/macros/s/AKfycbz22XIFYP3peSY7sCcO6Vg6CxtBByMGB7GY_MzUYEKSBVLSLisxh3NIjMve23zMG4VM/exec";
 const AFTERNOON_START = "13:00";
-const AFTERNOON_END   = "18:00"; // até as 22h
+const AFTERNOON_END   = "22:00"; // até as 22h
 const BLOCK_MIN      = 30;       // blocos de 30 min
 
 const SPACES = [
@@ -325,9 +331,49 @@ function renderCalendar(){
 }
 
 /* ===== List (mês) ===== */
+// Consolida reservas contíguas por dia + (solicitante, atividade)
+function consolidateMonth(res){
+  const byDate = {};
+  res.forEach(r=>{ (byDate[r.date] ||= []).push(r); });
+  const merged = [];
+  for (const [date, arr] of Object.entries(byDate)){
+    // agrupa por quem/atividade
+    const groups = {};
+    arr.forEach(r=>{ const k = `${r.solicitante}${r.atividade}`; (groups[k] ||= []).push(r); });
+    for (const list of Object.values(groups)){
+      list.sort((a,b)=> parseMin(a.start) - parseMin(b.start));
+      let curr = { date, solicitante:list[0].solicitante, atividade:list[0].atividade, start:list[0].start, end:list[0].end };
+      for (let i=1;i<list.length;i++){
+        const s = parseMin(list[i].start), e = parseMin(list[i].end);
+        const ce = parseMin(curr.end);
+        if (s <= ce){ // contígua ou sobreposta
+          if (e > ce) curr.end = list[i].end;
+        } else {
+          merged.push(curr);
+          curr = { date, solicitante:list[i].solicitante, atividade:list[i].atividade, start:list[i].start, end:list[i].end };
+        }
+      }
+      merged.push(curr);
+    }
+  }
+  return merged.sort((a,b)=> a.date===b.date ? (parseMin(a.start)-parseMin(b.start)) : a.date.localeCompare(b.date));
+}
 function renderList(){
-  const body=$('#reservationsBody'); body.innerHTML='';
-  if(!state.reservations.length){ body.innerHTML=`<div class="empty">Nenhuma reserva neste mês.</div>`; return; }
+  const body = $('#reservationsBody');
+  body.innerHTML = '';
+  const merged = consolidateMonth(state.reservations);
+  if (!merged.length){ body.innerHTML = `<div class="empty">Nenhuma reserva neste mês.</div>`; return; }
+  merged.forEach(r => {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `
+      <div class="badge">${fmtBR(r.date)} • ${r.start}–${r.end}</div>
+      <div>
+        <div><strong>Solicitante:</strong> ${esc(r.solicitante)}</div>
+        <div style="margin-top:4px"><strong>Atividade:</strong> ${esc(r.atividade)}</div>
+      </div>`;
+    body.appendChild(row);
+  });
+}
   const sorted=[...state.reservations].sort((a,b)=> a.date===b.date ? (parseMin(a.start)-parseMin(b.start)) : a.date.localeCompare(b.date));
   sorted.forEach(r=>{
     const row=document.createElement('div'); row.className='row';
