@@ -1,3 +1,5 @@
+<!-- Codigo escrito e revisado pelo Teacher Bruno do IAPE, por favor, replique com creditos ao IAPE!! 
+Fiquem a vontade pra checar  codigo... -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -5,10 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Iape - Agendamento de Espaços</title>
   <meta name="theme-color" content="#0B1D39" />
-  <!-- Performance: conexão antecipada com Apps Script -->
+  <!-- Performance: conexão antecipada com Apps Script pra ficar mais ligeirinho -->
   <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="dns-prefetch" href="//script.google.com">
-  <!-- Favicons (opcional) -->
+  <!-- Favicons (alguns nao vao ser utilizados) -->
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="alternate icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
@@ -38,7 +40,13 @@
     .grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
     @media(min-width:720px){.grid{grid-template-columns:repeat(3,1fr)}}
     .card{position:relative;border:1px solid var(--border);border-radius:18px;overflow:hidden;background:var(--card)}
-    .card img{width:100%;height:170px;object-fit:cover;display:block}
+   .card img{
+  width:100%;
+  aspect-ratio: 1 / 1;   /* altura = largura => quadrado */
+  height:auto;           /* deixa o browser calcular pela razão */
+  object-fit:cover;      /* corta centralizado se a foto não for quadrada */
+  display:block;
+}
     .card .name{position:absolute;left:10px;bottom:10px;padding:8px 12px;border-radius:999px;background:color-mix(in hsl,var(--bg) 65%,rgba(0,0,0,.5));border:1px solid var(--border);font-weight:700}
 
     .back{display:inline-flex;align-items:center;gap:8px;margin-bottom:10px}
@@ -73,12 +81,12 @@
 
     .badge{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;background:#0f172a;color:#cbd5e1;border:1px solid var(--border);font-size:13px}
     body.light .badge{background:#f1f5f9;color:#334155}
-    /* Destaque HOJE */
+    /* Destaque pro dia de HOJE (pra ficar mais visual pros teachers */
     .badge.today{ background: var(--ok); color:#fff; border-color: color-mix(in hsl, var(--ok) 55%, var(--border)); font-weight:800; }
 
     .empty{padding:12px;color:#94a3b8}
 
-    /* botão imprimir */
+    /* botão de imprimir o relatorio em pdf */
     .print-wrap{display:flex;justify-content:center;padding:16px 0 4px}
 
     /* MODAL */
@@ -102,7 +110,7 @@
     .slot-btn.selected{background:var(--ok)}
     .slot-busy{opacity:.9}
 
-    /* chips da tarde */
+    /* chips da parte da tarde */
     .af-grid{display:grid;gap:8px;grid-template-columns:repeat(2,1fr)}
     @media(min-width:720px){.af-grid{grid-template-columns:repeat(3,1fr)}}
     .chip{padding:8px 10px;border:1px solid var(--border);border-radius:10px;text-align:center}
@@ -146,7 +154,7 @@
     </section>
   </main>
 
-  <!-- SLOTS DO DIA (multi-seleção) -->
+  <!-- SLOTS DO DIA (multi-select) -->
   <div id="slotsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="slotsTitle">
     <div class="sheet">
       <header>
@@ -180,7 +188,7 @@
     </div>
   </div>
 
-  <!-- MODAL: nome + atividade (aplica a todos selecionados) -->
+  <!-- MODAL: nome + atividade (aplica em todos os horarios selecionados), pra ficar mais pratico -->
   <div id="reserveModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="reserveTitle">
     <div class="sheet">
       <header>
@@ -211,8 +219,8 @@
 /* ========= CONFIG ========= */
 const API_BASE = "https://script.google.com/macros/s/AKfycbwuluA4Eyw_cYc1RGGNvOAwZrzxtaaLzprChsY5UDYDUoStI5wenVkXTQjIdPW_eaEn/exec"; // use o seu link mais recente
 const AFTERNOON_START = "13:00";
-const AFTERNOON_END   = "18:00"; // até as 18h (ajuste se quiser 22:00)
-const BLOCK_MIN      = 30;       // blocos de 30 min
+const AFTERNOON_END   = "18:00"; // até as 18h (possivel ajuste 22:00, mas nao precisa por que nesse horario os diretores que usam)
+const BLOCK_MIN      = 30;       // blocos de 30 min pra ser mais preciso nas reservas
 
 const SPACES = [
   { name: "Sala Maker", slug: "sala-maker", img: "assets/sala-maker.png" },
@@ -263,7 +271,7 @@ const TIMESLOTS = {
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const state = { route:{page:'home',space:null}, month:new Date(), reservations:[], selectedDay:null, selections:[] };
-const RES_CACHE = new Map(); // cache por espaço+mês (SWR)
+const RES_CACHE = new Map(); // cache por espaço+mês (SWR), pra ficar mais ligeiro aqui tambem...
 
 function fmtDateISO(d){ return d.toISOString().slice(0,10); }
 function fmtBR(iso){ return new Date(iso+"T00:00:00").toLocaleDateString('pt-BR',{timeZone:'America/Recife'}); }
@@ -290,7 +298,7 @@ async function swrUpdate(space,y,m){
     if(state.route.space===space && state.month.getFullYear()===y && (state.month.getMonth()+1)===m){
       state.reservations = fresh; renderCalendar(); renderList();
     }
-  }catch(e){ /* silencia falha de rede */ }
+  }catch(e){ /* silencia quando tem falha de rede */ }
 }
 function prefetchAdjacent(space,baseDate){
   const prev=new Date(baseDate.getFullYear(), baseDate.getMonth()-1, 1);
@@ -648,3 +656,4 @@ boot();
 </script>
 </body>
 </html>
+
